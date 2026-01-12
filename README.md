@@ -58,10 +58,10 @@ To replicate this project, you will need the following:
 - Create domain user accounts
 - Set up shared folders
 - Manage policies (GPOs)
--       Hide Control Panel
--       Set wallpaper to school logo
--       Minimum 8-character passwords
--       5-minute lockout after 3 failed attempts
+    - Hide Control Panel
+    - Set wallpaper to school logo
+    - Minimum 8-character passwords
+    - 5-minute lockout after 3 failed attempts
 - Scheduled tasks (crontab)
 - Disk management (fstab)
 **Sprint 4:**
