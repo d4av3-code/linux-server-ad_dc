@@ -18,7 +18,7 @@ NetBIOS: LS06 | lab06.lan
 Domain: lab06.lan
 FQDN: LS06.lab06.lan
 
-![image](./images/0_linux-vBox.png)
+![image](./images/1.0_linux-vBox.png)
 
 ---
 
@@ -49,7 +49,7 @@ To replicate this project, you will need the following:
 ## Sprints
 
 **Sprint 1:**
-    - Install the server
+- Install the server
 **Sprint 2:**
 - Join Windows client
 - Join Linux client
@@ -58,8 +58,6 @@ To replicate this project, you will need the following:
 - Create domain user accounts
 - Set up shared folders
 - Manage policies (GPOs)
-    - Hide Control Panel
-    - Set wallpaper to school logo
     - Minimum 8-character passwords
     - 5-minute lockout after 3 failed attempts
 - Scheduled tasks (crontab)
@@ -160,11 +158,11 @@ Default Kerberos Realm: domain name in uppercase (LAB06.LAN).
 
 Kerberos servers for your realm: LS06.lab06.lan
 
-![image](./images/2_kerberos1.png)
+![image](./images/3.2_kerberos1.png)
 
 Administrative server for your Kerberos realm: LS06.lab06.lan
 
-![image](./images/2_kerberos2.png)
+![image](./images/3.2_kerberos2.png)
 
 ### 3.2. Configure Samba
 
@@ -185,7 +183,7 @@ adminpass="admin_21"
 
 ```
 
-![image](./images/3_samba.png)
+![image](./images/3.3_samba.png)
 
 Now change the dns.
 
@@ -209,8 +207,8 @@ sudo systemctl enable samba-ad-dc
 sudo systemctl start samba-ad-dc
 ```
 
-![image](./images/4_services-restarted.png)
+![image](./images/3.4_services-restarted.png)
 
 ### 5. Check domain
 
-![image](./images/5_domain-check.png)
+![image](./images/3.5_domain-check.png)
