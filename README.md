@@ -46,13 +46,36 @@ To replicate this project, you will need the following:
 
 ---
 
-## 1. Installation and Initial configuration
+## Sprints
+
+**Sprint 1:**
+    - Install the server
+**Sprint 2:**
+- Join Windows client
+- Join Linux client
+**Sprint 3:**
+- Install Domain Controller (Samba, Kerberos)
+- Create domain user accounts
+- Set up shared folders
+- Manage policies (GPOs)
+-       Hide Control Panel
+-       Set wallpaper to school logo
+-       Minimum 8-character passwords
+-       5-minute lockout after 3 failed attempts
+- Scheduled tasks (crontab)
+- Disk management (fstab)
+**Sprint 4:**
+- Create trust relationships between domains (with peer)
+
+---
+
+## Sprint 1: Installation and Initial configuration
 
 Follow these steps to set up your Linux server as a Samba 4 Domain Controller.
 
 ---
 
-### 1. Server Preparation
+### 1.1. Server Preparation
 
 First, ensure your server is up-to-date correctly.
 
@@ -111,7 +134,25 @@ Now install samba and kerberos.
 sudo apt install -y samba krb5-config winbind
 ```
 
-### 2. Configure Kerberos
+## 2. Sprint 2: Join clients to the domain (Windows and Linux)
+
+## 2.1. Join Windows to the domain
+First we part with the bashe that we have a windows alredy installed, and on the same network as the domain controler.
+Then after checking everything is alright we enter on 
+
+
+## 3. Sprint 3: Install samba and kerberos, create shared folders, add GPOs, create programed tasks and disk managment
+    instalar dc(samba, kerberos)
+    instalar usuarios de dominio
+    shared folders
+    gestionar politcas (GPOs)(
+        Hide Control Panel.
+        Set wallpaper to school logo
+        Minimum 8-character passwords.
+        5-minute lockout after 3 failed attempts.
+    tareas programadas (crontab)
+    gestion de discos (fstab)
+### 3.1. Configure Kerberos
 
 During the installation of krb5-config, you will be prompted to enter your Kerberos realm.
 
@@ -125,7 +166,7 @@ Administrative server for your Kerberos realm: LS06.lab06.lan
 
 ![image](./images/2_kerberos2.png)
 
-### 3. Configure Samba
+### 3.2. Configure Samba
 
 Before provisioning, move or remove the default smb.conf file.
 
@@ -153,7 +194,7 @@ sudo echo "nameserver 127.0.0.1
 nameserver 192.168.6.1" | sudo tee >> /etc/resolv.conf
 ```
 
-### 4. Restart Services
+### 3.3. Restart Services
 
 Restart services
 
@@ -173,7 +214,3 @@ sudo systemctl start samba-ad-dc
 ### 5. Check domain
 
 ![image](./images/5_domain-check.png)
-
-## 2. sprint 2
-
-sprint 2
