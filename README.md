@@ -91,7 +91,7 @@ sudo apt install -y vim net-tools ntp
 
 Now correctly configure it with a hostname and static IP address.
 
-```bash
+```yaml
 # Set hostname
 sudo hostnamectl set-hostname LS06.lab06.lan
 
