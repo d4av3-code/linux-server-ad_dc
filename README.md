@@ -56,12 +56,13 @@ To replicate this project, you will need the following:
 **Sprint 3:**
 - Install Domain Controller (Samba, Kerberos)
 - Create domain user accounts
-- Set up shared folders
 - Manage policies (GPOs)
     - Minimum 8-character passwords
     - 5-minute lockout after 3 failed attempts
+- Set up shared folders
 - Scheduled tasks (crontab)
 - Disk management (fstab)
+- Process Managment (ps -aux | htop)
 **Sprint 4:**
 - Create trust relationships between domains (with peer)
 
@@ -70,8 +71,6 @@ To replicate this project, you will need the following:
 ## Sprint 1: Installation and Initial configuration
 
 Follow these steps to set up your Linux server as a Samba 4 Domain Controller.
-
----
 
 ### 1.1. Server Preparation
 
@@ -109,8 +108,8 @@ echo "network:
       gateway4: 172.30.20.1
       nameservers:
         addresses:
-          - 127.0.0.1
           - 10.239.3.7
+          - 10.239.3.8
           - 8.8.8.8
     enp0s8:
       dhcp4: no
@@ -131,6 +130,7 @@ Now install samba and kerberos.
 # Install Samba and Dependencies
 sudo apt install -y samba krb5-config winbind
 ```
+---
 
 ## 2. Sprint 2: Join clients to the domain (Windows and Linux)
 
@@ -138,8 +138,9 @@ sudo apt install -y samba krb5-config winbind
 First we part with the bashe that we have a windows alredy installed, and on the same network as the domain controler.
 Then after checking everything is alright we enter on 
 
+---
 
-## 3. Sprint 3: Install samba and kerberos, create shared folders, add GPOs, create programed tasks and disk managment
+## 3. Sprint 3: Install samba and kerberos, create and manage usersadd GPOs, create shared folders, create programed tasks and disk managment
     instalar dc(samba, kerberos)
     instalar usuarios de dominio
     shared folders
