@@ -49,16 +49,21 @@ To replicate this project, you will need the following:
 ## Sprints
 
 **Sprint 1:**
+
 - Install the server
+
 **Sprint 2:**
+
 - Join Windows client
 - Join Linux client
+
 **Sprint 3:**
+
 - Install Domain Controller (Samba, Kerberos)
 - Create domain user accounts
 - Manage policies (GPOs)
-    - Minimum 8-character passwords
-    - 5-minute lockout after 3 failed attempts
+  - Minimum 8-character passwords
+  - 5-minute lockout after 3 failed attempts
 - Set up shared folders
 - Scheduled tasks (crontab)
 - Disk management (fstab)
@@ -129,28 +134,33 @@ Now install samba and kerberos.
 ```bash
 # Install Samba and Dependencies
 sudo apt install -y samba krb5-config winbind
+
 ```
+
 ---
 
 ## 2. Sprint 2: Join clients to the domain (Windows and Linux)
 
 ## 2.1. Join Windows to the domain
+
 First we part with the bashe that we have a windows alredy installed, and on the same network as the domain controler.
-Then after checking everything is alright we enter on 
+Then after checking everything is alright we enter on ...
 
 ---
 
 ## 3. Sprint 3: Install samba and kerberos, create and manage usersadd GPOs, create shared folders, create programed tasks and disk managment
-    instalar dc(samba, kerberos)
-    instalar usuarios de dominio
-    shared folders
-    gestionar politcas (GPOs)(
-        Hide Control Panel.
-        Set wallpaper to school logo
-        Minimum 8-character passwords.
-        5-minute lockout after 3 failed attempts.
-    tareas programadas (crontab)
-    gestion de discos (fstab)
+
+instalar dc(samba, kerberos)
+instalar usuarios de dominio
+shared folders
+gestionar politcas (GPOs)(PSOs)
+    Hide Control Panel.
+    Set wallpaper to school logo
+    Minimum 8-character passwords.
+    5-minute lockout after 3 failed attempts.
+tareas programadas (crontab)
+gestion de discos (fstab)
+
 ### 3.1. Configure Kerberos
 
 During the installation of krb5-config, you will be prompted to enter your Kerberos realm.
