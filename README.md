@@ -169,13 +169,24 @@ nslookup ls06.lab06.lan
 
 ### 2.1.2 Join Domain
 
-Open Settings -> System -> About -> Related settings -> Change settings -> Change
+Settings ->
 ![image](./images/2.1.1_.png)
+
+System ->
 ![image](./images/2.1.2_.png)
+
+Open Settings ->
 ![image](./images/2.1.3_.png)
+
+ About ->
 ![image](./images/2.1.4_.png)
+
+Related settings ->
 ![image](./images/2.1.5_.png)
+
+-> Change settings -> Change
 ![image](./images/2.1.6_.png)
+
 Click Domain or workgroup
 Click Domain
 Type: lab06.lan
