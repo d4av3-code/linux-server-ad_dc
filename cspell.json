@@ -1,0 +1,15 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "adminpass",
+        "netplan",
+        "nmbd",
+        "resolv",
+        "winbind"
+    ],
+    "ignoreWords": [],
+    "import": []
+}

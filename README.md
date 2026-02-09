@@ -67,7 +67,7 @@ To replicate this project, you will need the following:
 - Set up shared folders
 - Scheduled tasks (crontab)
 - Disk management (fstab)
-- Process Managment (ps -aux | htop)
+- Process Management (ps -aux | htop)
 **Sprint 4:**
 - Create trust relationships between domains (with peer)
 
@@ -143,23 +143,36 @@ sudo apt install -y samba krb5-config winbind
 
 ## 2.1. Join Windows to the domain
 
-First we part with the bashe that we have a windows alredy installed, and on the same network as the domain controler.
-Then after checking everything is alright we enter on ...
+First we start with the base that we have a windows already installed
+
+### 2.1.1 Configure Network Settings
+
+Open Settings → Network & Internet → Ethernet/Wi-Fi
+We Select Edit on IP assignment
+Click Manual
+Configure:
+IP address: 192.168.6.20
+Subnet mask: 255.255.255.0
+Gateway: 192.168.6.1 (optional)
+Primary DNS: 192.168.6.1
+Secondary DNS: 10.239.3.7
+
+After setting up the network configuration we check we have connectivity with the server
 
 ---
 
-## 3. Sprint 3: Install samba and kerberos, create and manage usersadd GPOs, create shared folders, create programed tasks and disk managment
+## 3. Sprint 3: Install samba and kerberos, create and manage users, GPOs/PSOs, create shared folders, create programmed tasks and disk management
 
-instalar dc(samba, kerberos)
-instalar usuarios de dominio
+install dc(samba, kerberos)
+install domain users
 shared folders
-gestionar politcas (GPOs)(PSOs)
+manage policies (GPOs)(PSOs)
     Hide Control Panel.
     Set wallpaper to school logo
     Minimum 8-character passwords.
     5-minute lockout after 3 failed attempts.
-tareas programadas (crontab)
-gestion de discos (fstab)
+programmed tasks (crontab)
+disk management (fstab)
 
 ### 3.1. Configure Kerberos
 
