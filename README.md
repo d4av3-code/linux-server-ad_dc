@@ -147,7 +147,9 @@ First we start with the base that we have a windows already installed
 
 ### 2.1.1 Configure Network Settings
 
-Open Settings → Network & Internet → Ethernet/Wi-Fi
+Settings → Network & Internet → Ethernet/Wi-Fi
+
+Ethernet/Wi-Fi
 We Select Edit on IP assignment
 Click Manual
 Configure:
@@ -158,6 +160,33 @@ Primary DNS: 192.168.6.1
 Secondary DNS: 10.239.3.7
 
 After setting up the network configuration we check we have connectivity with the server
+
+´´´bash
+ping 192.168.6.1
+nslookup lab06.lan
+nslookup ls06.lab06.lan
+´´´
+
+### 2.1.2 Join Domain
+
+Open Settings -> System -> About -> Related settings -> Change settings -> Change
+![image](./images/2.1.1_.png)
+![image](./images/2.1.2_.png)
+![image](./images/2.1.3_.png)
+![image](./images/2.1.4_.png)
+![image](./images/2.1.5_.png)
+![image](./images/2.1.6_.png)
+Click Domain or workgroup
+Click Domain
+Type: lab06.lan
+Click OK
+Use credentials:
+Username: Administrator
+Password: Admin_21
+Click OK
+![image](./images/2.1.7_.png)
+
+Now the Client has joined the domain
 
 ---
 
