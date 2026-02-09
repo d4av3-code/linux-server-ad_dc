@@ -172,18 +172,23 @@ nslookup ls06.lab06.lan
 1. Navigate to the **Settings**.
 
 ![image](./images/2.1.1_.png)
+
 2. Click on the **System** option.
 
 ![image](./images/2.1.2_.png)
+
 3. Select **About** from the left sidebar.
 
 ![image](./images/2.1.3_.png)
+
 4. Look for **Related settings**.
 
 ![image](./images/2.1.4_.png)
+
 5. Click on **Change settings**.
 
 ![image](./images/2.1.5_.png)
+
 6. Select **Change** to proceed.
 
 ![image](./images/2.1.6_.png)
