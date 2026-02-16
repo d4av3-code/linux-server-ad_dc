@@ -413,7 +413,7 @@ sudo systemctl start samba-ad-dc
 
 ## Sprint 4: Create trust relationships between domains
 
-### 4.1. Create trust relationships between 
+### 4.1. Create trust relationships between
 
 ## Sprint 5: Create a DC/AD in AWS
 
