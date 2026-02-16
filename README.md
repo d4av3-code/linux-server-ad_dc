@@ -49,27 +49,25 @@ To replicate this project, you will need the following:
 ## Sprints
 
 **Sprint 1:**
-
-- Install the server
+1.1. Install the server
 
 **Sprint 2:**
-
-- Join Windows client
-- Join Linux client
+2.1. Join Windows client
+2.2. Join Linux client
 
 **Sprint 3:**
+3.1. Install Domain Controller (Samba, Kerberos)
+3.2. Create domain user accounts
+3.3. Manage policies (GPOs)
+  - 3.3.1. Minimum 8-character passwords
+  - 3.3.2. 5-minute lockout after 3 failed attempts
+3.4. Set up shared folders
+3.5. Scheduled tasks (crontab)
+3.6. Disk management (fstab)
+3.7. Process Management (ps -aux | htop)
 
-- Install Domain Controller (Samba, Kerberos)
-- Create domain user accounts
-- Manage policies (GPOs)
-  - Minimum 8-character passwords
-  - 5-minute lockout after 3 failed attempts
-- Set up shared folders
-- Scheduled tasks (crontab)
-- Disk management (fstab)
-- Process Management (ps -aux | htop)
 **Sprint 4:**
-- Create trust relationships between domains (with peer)
+4.1. Create trust relationships between domains (with peer)
 
 ---
 
@@ -145,7 +143,7 @@ sudo apt install -y samba krb5-config winbind
 
 First we start with the base that we have a windows already installed
 
-### 2.1.1 Configure Network Settings
+### 2.1.1. Configure Network Settings
 
 Settings → Network & Internet → Ethernet/Wi-Fi
 
@@ -161,13 +159,13 @@ Secondary DNS: 10.239.3.7
 
 After setting up the network configuration we check we have connectivity with the server
 
-´´´bash
+```powershell
 ping 192.168.6.1
 nslookup lab06.lan
 nslookup ls06.lab06.lan
-´´´
+```
 
-## 2.1.2 Join Domain
+## 2.1.2. Join Domain
 
 1. Navigate to the **Settings**.
 
@@ -193,17 +191,141 @@ nslookup ls06.lab06.lan
 
 ![image](./images/2.1.6_.png)
 
-Click Domain or workgroup
-Click Domain
-Type: lab06.lan
-Click OK
-Use credentials:
-Username: Administrator
-Password: Admin_21
-Click OK
+7. Click Domain or workgroup
+8. Click Domain
+9. Type: lab06.lan
+10. Click OK
+11. Use credentials:
+12. Username: Administrator
+13. Password: Admin_21
+14. Click OK
+
 ![image](./images/2.1.7_.png)
 
 Now the Client has joined the domain
+
+## 2.1.3. Verify Domain Join
+
+View domain controller
+
+```powershell
+nltest /dclist:lab05.
+```
+
+## 2.1.4. Access Shared Folders
+
+**From File Explorer:**
+In address bar, type: \\ls05.lab05.lan
+
+**There we have:**
+FinanceDocs
+HRDocs
+Public
+
+**Map network drive:**
+Right-click "This PC"
+Click "Map network drive"
+Choose drive letter (Z:)
+Type: \\ls05.lab05.lan\Public
+Check "Reconnect at sign-in"
+Click Finish
+
+## 2.2. Join Linux to the domain
+
+First we start with the base that we have a windows already installed
+
+### 2.2.1. Configure Network Settings
+
+We edit netplan:
+
+```bash
+sudo nano /etc/netplan/50-cloud-init.yaml
+```
+
+```netplan
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses:
+        - 192.168.6.21/24
+      nameservers:
+        addresses: [192.168.6.1]
+        search: [lab06.lan]
+```
+
+```bash
+sudo netplan apply
+```
+
+After setting up the network configuration we check we have connectivity with the server
+
+```bash
+ping 192.168.6.1
+nslookup lab06.lan
+nslookup ls06.lab06.lan
+```
+
+### 2.2.2. Install Samba & Kerberos user
+
+```bash
+sudo apt update
+sudo apt install -y samba-common-bin krb5-user
+```
+
+Kerberos configuration settings:
+
+Default Kerberos realm: LAB06.LAN
+Kerberos servers: ls06.lab06.lan
+Administrative server: ls06.lab06.lan
+
+### 2.2.3. Discover Domain
+
+```bash
+sudo realm discover lab06.lan
+```
+
+It gives this output:
+lab05.lan
+  type: kerberos
+  realm-name: LAB06.LAN
+  domain-name: lab06.lan
+  configured: no
+  server-software: active-directory
+  client-software: sssd
+
+### 2.2.4. Join Domain
+
+Then we join the domain with the password: Admin_21
+
+```bash
+sudo realm join --verbose --user=administrator lab05.lan
+```
+
+### 2.2.5. Verify Domain Join
+
+```bash
+sudo realm list
+```
+
+```text
+lab06.lan
+  type: kerberos
+  realm-name: LAB06.LAN
+  domain-name: lab06.lan
+  configured: kerberos-member
+  server-software: active-directory
+  client-software: sssd
+  login-formats: %U@lab06.lan
+  login-policy: allow-realm-logins
+```
+
+and on the DC:
+
+```bash
+sudo samba-tool computer list
+```
 
 ---
 
@@ -278,6 +400,8 @@ sudo systemctl start samba-ad-dc
 ```
 
 ![image](./images/3.4_services-restarted.png)
+
+### 3.4. Shared folders
 
 ### 5. Check domain
 
