@@ -69,6 +69,10 @@ To replicate this project, you will need the following:
 **Sprint 4:**
 4.1. Create trust relationships between domains (with peer)
 
+**Sprint 5:**
+5.1. Create a DC/AD in AWS
+5.2. Crate a shared folder and an AD user
+
 ---
 
 ## Sprint 1: Installation and Initial configuration
@@ -137,7 +141,7 @@ sudo apt install -y samba krb5-config winbind
 
 ---
 
-## 2. Sprint 2: Join clients to the domain (Windows and Linux)
+## Sprint 2: Join clients to the domain (Windows and Linux)
 
 ## 2.1. Join Windows to the domain
 
@@ -329,7 +333,7 @@ sudo samba-tool computer list
 
 ---
 
-## 3. Sprint 3: Install samba and kerberos, create and manage users, GPOs/PSOs, create shared folders, create programmed tasks and disk management
+## Sprint 3: Install samba and kerberos, create and manage users, GPOs/PSOs, create shared folders, create programmed tasks and disk management
 
 install dc(samba, kerberos)
 install domain users
@@ -403,6 +407,14 @@ sudo systemctl start samba-ad-dc
 
 ### 3.4. Shared folders
 
-### 5. Check domain
+### 3.5. Check domain
 
 ![image](./images/3.5_domain-check.png)
+
+
+## Sprint 4: Create trust relationships between domains 
+
+## Sprint 5: Create a DC/AD in AWS
+5.1. Create a DC/AD in AWS
+5.2. Crate a shared folder and an AD user
+
