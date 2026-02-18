@@ -8,6 +8,7 @@ This will be my personal server configurations change as needed:
 
 Linux Server:
 
+```txt
 Password: admin_21
 Internal network IP: 192.168.6.1
 Bridge IP: 172.30.20.46/25 (enp0s3)
@@ -17,6 +18,7 @@ DNS: 192.168.6.1
 NetBIOS: LS06 | lab06.lan
 Domain: lab06.lan
 FQDN: LS06.lab06.lan
+```
 
 ![image](./images/1.0_linux-vBox.png)
 
