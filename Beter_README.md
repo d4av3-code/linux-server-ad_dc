@@ -51,7 +51,8 @@ To replicate this project, you will need the following:
 **Sprint 1:**
 
 - [1.1. Server Preparation](#11-server-preparation)
-- [1.2. Configure Samba](#12-configure-samba)
+- [1.2. Installation of Samba and Kerberos](#12-installation-of-samba-and-kerberos)
+- [1.2.1. Configure Samba](#121-configure-samba)
 - [1.3. Restart Services](#13-restart-services)
 
 **Sprint 2:**
@@ -148,6 +149,8 @@ network:
 sudo netplan apply
 ```
 
+### 1.2. Installation of Samba and Kerberos
+
 Now install Samba and Kerberos:
 
 ```bash
@@ -165,7 +168,7 @@ During the installation of krb5-config you will be prompted for Kerberos configu
 
 ![image](./images/1.1_kerberos2.png)
 
-### 1.2. Configure Samba
+### 1.2.1 Configure Samba
 
 Before provisioning, move or remove the default smb.conf file.
 
@@ -178,7 +181,7 @@ sudo samba-tool domain provision --use-rfc2307 --interactive
 
 Provisioning answers:
 
-```
+```txt
 realm         = LAB06.LAN
 domain        = LAB06
 server-role   = dc
