@@ -50,7 +50,9 @@ To replicate this project, you will need the following:
 
 **Sprint 1:**
 
-- [1.1. Install the server](#11-server-preparation)
+- [1.1. Server Preparation](#11-server-preparation)
+- [1.2. Configure Samba](#12-configure-samba)
+- [1.3. Restart Services](#13-restart-services)
 
 **Sprint 2:**
 
@@ -59,17 +61,14 @@ To replicate this project, you will need the following:
 
 **Sprint 3:**
 
-- [3.1. Configure Kerberos](#31-configure-kerberos)
-- [3.2. Configure Samba](#32-configure-samba)
-- [3.3. Restart Services](#33-restart-services)
-- [3.4. Shared Folders](#34-shared-folders)
-- [3.5. Create Domain Users](#35-create-domain-users)
-- [3.6. Manage Policies (GPOs/PSOs)](#36-manage-policies-gpospos)
-  - [3.6.1. Minimum 8-character passwords](#361-minimum-8-character-passwords)
-  - [3.6.2. 5-minute lockout after 3 failed attempts](#362-5-minute-lockout-after-3-failed-attempts)
-- [3.7. Scheduled Tasks (crontab)](#37-scheduled-tasks-crontab)
-- [3.8. Disk Management (fstab)](#38-disk-management-fstab)
-- [3.9. Process Management](#39-process-management)
+- [3.1. Shared Folders](#31-shared-folders)
+- [3.2. Create Domain Users](#32-create-domain-users)
+- [3.3. Manage Policies (GPOs/PSOs)](#33-manage-policies-gpospos)
+  - [3.3.1. Minimum 8-character passwords](#331-minimum-8-character-passwords)
+  - [3.3.2. 5-minute lockout after 3 failed attempts](#332-5-minute-lockout-after-3-failed-attempts)
+- [3.4. Scheduled Tasks (crontab)](#34-scheduled-tasks-crontab)
+- [3.5. Disk Management (fstab)](#35-disk-management-fstab)
+- [3.6. Process Management](#36-process-management)
 
 **Sprint 4:**
 
@@ -79,10 +78,12 @@ To replicate this project, you will need the following:
 
 - [5.1. Create a DC/AD in AWS](#51-create-a-dcad-in-aws)
 - [5.2. Create a shared folder and an AD user](#52-create-a-shared-folder-and-an-ad-user)
+- [5.3. Launch a Windows Client in AWS](#53-launch-a-windows-client-in-aws)
+- [5.4. Access the AWS Shared Folder from Local Linux](#54-access-the-aws-shared-folder-from-local-linux)
 
 ---
 
-## Sprint 1: Installation and Initial configuration
+## Sprint 1: Installation (Samba and Kerberos) and Initial Configuration
 
 Follow these steps to set up your Linux server as a Samba 4 Domain Controller.
 
@@ -104,15 +105,22 @@ sudo apt install -y vim net-tools ntp
 
 Now correctly configure it with a hostname and static IP address.
 
-```yaml
+```bash
 # Set hostname
 sudo hostnamectl set-hostname LS06.lab06.lan
 
 # Edit /etc/hosts to include your static IP and FQDN
 echo "192.168.6.1    LS06.lab06.lan    LS06" | sudo tee /etc/hosts
+```
 
-# Edit netplan and set an static ip address
-echo "network:
+Edit netplan and set a static IP address:
+
+```bash
+sudo nano /etc/netplan/50-cloud-init.yaml
+```
+
+```yaml
+network:
   version: 2
   ethernets:
     enp0s3:
@@ -132,43 +140,106 @@ echo "network:
       gateway4: 192.168.6.1
       nameservers:
         addresses:
-          - 127.0.0.1" | sudo tee /etc/netplan/50-cloud-init.yaml
+          - 127.0.0.1
+```
 
+```bash
 # Apply changes
 sudo netplan apply
 ```
 
-Now install samba and kerberos.
+Now install Samba and Kerberos:
 
 ```bash
-# Install Samba and Dependencies
 sudo apt install -y samba krb5-config winbind
+```
+
+During the installation of krb5-config you will be prompted for Kerberos configuration:
+
+- **Default Kerberos Realm:** LAB06.LAN
+
+![image](./images/1.1_kerberos1.png)
+
+- **Kerberos servers for your realm:** LS06.lab06.lan
+- **Administrative server for your Kerberos realm:** LS06.lab06.lan
+
+![image](./images/1.1_kerberos2.png)
+
+### 1.2. Configure Samba
+
+Before provisioning, move or remove the default smb.conf file.
+
+```bash
+sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bkp
+
+# Now, provision the domain (realm in uppercase)
+sudo samba-tool domain provision --use-rfc2307 --interactive
+```
+
+Provisioning answers:
 
 ```
+realm         = LAB06.LAN
+domain        = LAB06
+server-role   = dc
+dns-backend   = SAMBA_INTERNAL
+dns-forwarder = 192.168.6.1
+adminpass     = Admin_21
+```
+
+![image](./images/1.2_samba.png)
+
+Now update the DNS resolver:
+
+```bash
+sudo bash -c 'echo "nameserver 127.0.0.1
+nameserver 192.168.6.1" > /etc/resolv.conf'
+```
+
+### 1.3. Restart Services
+
+```bash
+# Stop and disable non-DC services (if they are running)
+sudo systemctl stop smbd nmbd winbind
+sudo systemctl disable smbd nmbd winbind
+
+# Enable and start the Active Directory DC service
+sudo systemctl unmask samba-ad-dc
+sudo systemctl enable samba-ad-dc
+sudo systemctl start samba-ad-dc
+```
+
+![image](./images/1.3_services-restarted.png)
+
+Verify the domain is running correctly:
+
+```bash
+sudo samba-tool domain info 127.0.0.1
+sudo samba-tool user list
+```
+
+![image](./images/1.3_domain-check.png)
 
 ---
 
-## Sprint 2: Join clients to the domain (Windows and Linux)
+## Sprint 2: Join Clients to the Domain (Windows and Linux)
 
-## 2.1. Join Windows to the domain
+### 2.1. Join Windows to the Domain
 
-First we start with the base that we have a windows already installed
+First we start with the base that we have a Windows client already installed.
 
-### 2.1.1. Configure Network Settings
+#### 2.1.1. Configure Network Settings
 
-Settings → Network & Internet → Ethernet/Wi-Fi
+Settings → Network & Internet → Ethernet/Wi-Fi → Edit → Manual
 
-Ethernet/Wi-Fi
-We Select Edit on IP assignment
-Click Manual
 Configure:
-IP address: 192.168.6.20
-Subnet mask: 255.255.255.0
-Gateway: 192.168.6.1 (optional)
-Primary DNS: 192.168.6.1
-Secondary DNS: 10.239.3.7
+- **IP address:** 192.168.6.20
+- **Subnet mask:** 255.255.255.0
+- **Gateway:** 192.168.6.1 (optional)
+- **Primary DNS:** 192.168.6.1
+- **Secondary DNS:** 10.239.3.7
 
-After setting up the network configuration we check we have connectivity with the server
+After setting up the network configuration check connectivity with the server:
 
 ```powershell
 ping 192.168.6.1
@@ -176,9 +247,9 @@ nslookup lab06.lan
 nslookup ls06.lab06.lan
 ```
 
-## 2.1.2. Join Domain
+#### 2.1.2. Join Domain
 
-- 1 Navigate to the **Settings**.
+- 1 Navigate to **Settings**.
 
 ![image](./images/2.1.1_.png)
 
@@ -202,58 +273,59 @@ nslookup ls06.lab06.lan
 
 ![image](./images/2.1.6_.png)
 
-- 7 Click Domain or workgroup
-- 8 Click Domain
-- 9 Type: lab06.lan
-- 10 Click OK
-- 11 Use credentials:
-- 12 Username: Administrator
-- 13 Password: Admin_21
-- 14 Click OK
+- 7 Click **Domain or workgroup**
+- 8 Click **Domain**
+- 9 Type: `lab06.lan`
+- 10 Click **OK**
+- 11 Enter credentials:
+  - **Username:** Administrator
+  - **Password:** Admin_21
+- 12 Click **OK**
 
 ![image](./images/2.1.7_.png)
 
-Now the Client has joined the domain
+The client has now joined the domain.
 
-## 2.1.3. Verify Domain Join
-
-View domain controller
+#### 2.1.3. Verify Domain Join
 
 ```powershell
 nltest /dclist:lab06.lan
 ```
 
-## 2.1.4. Access Shared Folders
+#### 2.1.4. Access Shared Folders
 
-**From File Explorer:**
-In address bar, type: \\ls06.lab06.lan
+**From File Explorer**, type in the address bar:
 
-**There we have:**
-FinanceDocs
-HRDocs
-Public
+```
+\\ls06.lab06.lan
+```
 
-**Map network drive:**
-Right-click "This PC"
-Click "Map network drive"
-Choose drive letter (Z:)
-Type: \\ls06.lab06.lan\Public
-Check "Reconnect at sign-in"
-Click Finish
+Available shares:
+- FinanceDocs
+- HRDocs
+- Public
 
-## 2.2. Join Linux to the domain
+**Map a network drive:**
 
-First we start with the base that we have a Linux client already installed
+- 1 Right-click **This PC** → **Map network drive**
+- 2 Choose a drive letter (e.g. Z:)
+- 3 Enter path: `\\ls06.lab06.lan\Public`
+- 4 Check **Reconnect at sign-in**
+- 5 Click **Finish**
 
-### 2.2.1. Configure Network Settings
+---
 
-We edit netplan:
+### 2.2. Join Linux to the Domain
+
+First we start with the base that we have a Linux client already installed.
+
+#### 2.2.1. Configure Network Settings
 
 ```bash
 sudo nano /etc/netplan/50-cloud-init.yaml
 ```
 
-```netplan
+```yaml
 network:
   version: 2
   ethernets:
@@ -270,7 +342,7 @@ network:
 sudo netplan apply
 ```
 
-After setting up the network configuration we check we have connectivity with the server
+Verify connectivity with the server:
 
 ```bash
 ping 192.168.6.1
@@ -278,7 +350,7 @@ nslookup lab06.lan
 nslookup ls06.lab06.lan
 ```
 
-### 2.2.2. Install Samba & Kerberos user
+#### 2.2.2. Install Required Packages
 
 ```bash
 sudo apt update
@@ -286,18 +358,18 @@ sudo apt install -y samba-common-bin krb5-user
 ```
 
 Kerberos configuration settings:
+- **Default Kerberos realm:** LAB06.LAN
+- **Kerberos servers:** ls06.lab06.lan
+- **Administrative server:** ls06.lab06.lan
 
-Default Kerberos realm: LAB06.LAN
-Kerberos servers: ls06.lab06.lan
-Administrative server: ls06.lab06.lan
-
-### 2.2.3. Discover Domain
+#### 2.2.3. Discover Domain
 
 ```bash
 sudo realm discover lab06.lan
 ```
 
-It gives this output:
+Expected output:
+```
 lab06.lan
   type: kerberos
   realm-name: LAB06.LAN
@@ -305,22 +377,23 @@ lab06.lan
   configured: no
   server-software: active-directory
   client-software: sssd
+```
 
-### 2.2.4. Join Domain
-
-Then we join the domain with the password: Admin_21
+#### 2.2.4. Join Domain
 
 ```bash
 sudo realm join --verbose --user=administrator lab06.lan
+# Password: Admin_21
 ```
 
-### 2.2.5. Verify Domain Join
+#### 2.2.5. Verify Domain Join
 
 ```bash
 sudo realm list
 ```
 
-```text
+Expected output:
+```
 lab06.lan
   type: kerberos
   realm-name: LAB06.LAN
@@ -332,7 +405,7 @@ lab06.lan
   login-policy: allow-realm-logins
 ```
 
-and on the DC:
+Verify on the DC:
 
 ```bash
 sudo samba-tool computer list
@@ -340,68 +413,9 @@ sudo samba-tool computer list
 
 ---
 
-## Sprint 3: Install samba and kerberos, create and manage users, GPOs/PSOs, create shared folders, create programmed tasks and disk management
+## Sprint 3: Create and Manage Users, GPOs/PSOs, Shared Folders, Scheduled Tasks and Disk Management
 
-### 3.1. Configure Kerberos
-
-During the installation of krb5-config, you will be prompted to enter your Kerberos realm.
-
-Default Kerberos Realm: domain name in uppercase (LAB06.LAN).
-
-Kerberos servers for your realm: LS06.lab06.lan
-
-![image](./images/3.2_kerberos1.png)
-
-Administrative server for your Kerberos realm: LS06.lab06.lan
-
-![image](./images/3.2_kerberos2.png)
-
-### 3.2. Configure Samba
-
-Before provisioning, move or remove the default smb.conf file.
-
-```bash
-sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bkp
-
-# Now, provision the domain (realm in uppercase)
-sudo samba-tool domain provision --use-rfc2307 --interactive
-
-realm=LAB06.LAN
-domain=LAB06
-server-role=dc
-dns-backend=SAMBA_INTERNAL
-dns-forwarder=192.168.6.1
-adminpass="admin_21" 
-
-```
-
-![image](./images/3.3_samba.png)
-
-Now change the dns.
-
-```bash
-sudo echo "nameserver 127.0.0.1
-nameserver 192.168.6.1" | sudo tee >> /etc/resolv.conf
-```
-
-### 3.3. Restart Services
-
-Restart services
-
-```bash
-# Stop and disable non-DC services (if they are running)
-sudo systemctl stop smbd nmbd winbind
-sudo systemctl disable smbd nmbd winbind
-
-# Enable and start the Active Directory DC service
-sudo systemctl unmask samba-ad-dc
-sudo systemctl enable samba-ad-dc
-sudo systemctl start samba-ad-dc
-```
-
-![image](./images/3.4_services-restarted.png)
-
-### 3.4. Shared Folders
+### 3.1. Shared Folders
 
 Create the directory structure for shared folders and configure Samba shares.
 
@@ -481,7 +495,9 @@ for dir in finance hr public; do
 done
 ```
 
-### 3.5. Create Domain Users
+---
+
+### 3.2. Create Domain Users
 
 Create Organizational Units and security groups, then add users.
 
@@ -530,9 +546,11 @@ sudo samba-tool group listmembers IT_Admins
 sudo samba-tool group listmembers HR_Staff
 ```
 
-### 3.6. Manage Policies (GPOs/PSOs)
+---
 
-#### 3.6.1. Minimum 8-character passwords
+### 3.3. Manage Policies (GPOs/PSOs)
+
+#### 3.3.1. Minimum 8-character passwords
 
 View current password policy and set minimum length:
 
@@ -554,7 +572,7 @@ sudo samba-tool domain passwordsettings show
 
 Expected output:
 
-```txt
+```
 Password complexity: on
 Minimum password length: 8
 Password history length: 24
@@ -562,7 +580,7 @@ Minimum password age (days): 1
 Maximum password age (days): 42
 ```
 
-#### 3.6.2. 5-minute lockout after 3 failed attempts
+#### 3.3.2. 5-minute lockout after 3 failed attempts
 
 ```bash
 sudo samba-tool domain passwordsettings set --account-lockout-threshold=3
@@ -578,7 +596,7 @@ sudo samba-tool domain passwordsettings show
 
 Expected output:
 
-```txt
+```
 Account lockout duration (mins): 5
 Account lockout threshold (attempts): 3
 Reset account lockout after (mins): 5
@@ -590,7 +608,9 @@ To unlock an account manually if needed:
 sudo samba-tool user enable <username>
 ```
 
-### 3.7. Scheduled Tasks (crontab)
+---
+
+### 3.4. Scheduled Tasks (crontab)
 
 Use `crontab` to schedule automated tasks on the domain controller, such as log rotation or backup scripts.
 
@@ -628,7 +648,9 @@ View cron logs to confirm jobs are running:
 grep CRON /var/log/syslog | tail -20
 ```
 
-### 3.8. Disk Management (fstab)
+---
+
+### 3.5. Disk Management (fstab)
 
 Use `/etc/fstab` to automatically mount volumes on boot, useful for dedicated storage for Samba shares.
 
@@ -659,7 +681,7 @@ Add the entry to `/etc/fstab`:
 sudo nano /etc/fstab
 ```
 
-```fstab
+```
 # Dedicated storage for Samba shares (replace UUID with your actual UUID)
 UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  /srv/samba  ext4  defaults,acl  0  2
 ```
@@ -675,7 +697,9 @@ sudo mount -a
 df -h | grep samba
 ```
 
-### 3.9. Process Management
+---
+
+### 3.6. Process Management
 
 Monitor and manage system processes relevant to the domain controller.
 
@@ -693,7 +717,7 @@ htop
 
 Key Samba processes to look for:
 
-```txt
+```
 samba    -- main AD DC process
 smbd     -- file sharing (should NOT be running on DC)
 nmbd     -- NetBIOS (should NOT be running on DC)
@@ -712,13 +736,11 @@ sudo journalctl -u samba-ad-dc -f
 sudo ss -tulnp | grep -E ':(53|88|389|445|636|3268)'
 ```
 
-![image](./images/3.5_domain-check.png)
-
 ---
 
-## Sprint 4: Create trust relationships between domains
+## Sprint 4: Create Trust Relationships Between Domains
 
-### 4.1. Create trust relationships between
+### 4.1. Create Trust Relationships Between
 
 Configure DNS forwarding on your DC so it can resolve the peer domain before creating the trust.
 
@@ -756,15 +778,13 @@ Verify and validate the trust:
 
 ```bash
 sudo samba-tool domain trust list
-
 sudo samba-tool domain trust show <peer-domain>
-
 sudo samba-tool domain trust validate <peer-domain>
 ```
 
 Expected output from `trust list`:
 
-```txt
+```
 Type[Forest]   Transitive[Yes] Direction[BOTH]     Name[<peer-domain>]
 ```
 
@@ -800,7 +820,6 @@ This sprint sets up a Samba 4 Domain Controller on an AWS EC2 instance, replicat
 
 | Type | Protocol | Port | Source | Description |
 |------|----------|------|--------|-------------|
-
 | SSH | TCP | 22 | Your IP | Admin access |
 | DNS (UDP) | UDP | 53 | VPC CIDR | DNS |
 | DNS (TCP) | TCP | 53 | VPC CIDR | DNS |
@@ -813,7 +832,6 @@ This sprint sets up a Samba 4 Domain Controller on an AWS EC2 instance, replicat
 | Custom TCP | TCP | 49152-65535 | VPC CIDR | RPC dynamic |
 
 - 4 Under **Storage**: set at least **20 GB** (gp3 recommended).
-
 - 5 Click **Launch Instance**.
 
 #### 5.1.2. Connect to the Instance
@@ -842,13 +860,13 @@ sudo hostnamectl set-hostname ls06-aws.lab06.lan
 sudo nano /etc/hosts
 ```
 
-Add the following line (replace with your EC2 private IP):
+Add (replace with your EC2 private IP):
 
-```txt
+```
 <EC2-PRIVATE-IP>   ls06-aws.lab06.lan   ls06-aws
 ```
 
-#### 5.1.4. Disable systemd-resolved (required for Samba DNS)
+#### 5.1.4. Disable systemd-resolved (Required for Samba DNS)
 
 ```bash
 sudo systemctl disable --now systemd-resolved
@@ -857,7 +875,7 @@ sudo unlink /etc/resolv.conf
 sudo nano /etc/resolv.conf
 ```
 
-```txt
+```
 nameserver 127.0.0.1
 nameserver 8.8.8.8
 search lab06.lan
@@ -872,7 +890,6 @@ sudo apt install -y acl attr samba samba-dsdb-modules samba-vfs-modules \
 ```
 
 When prompted for Kerberos configuration:
-
 - **Default Kerberos realm:** LAB06.LAN
 - **Kerberos servers:** ls06-aws.lab06.lan
 - **Administrative server:** ls06-aws.lab06.lan
@@ -894,7 +911,6 @@ Provisioning answers:
 
 | Question | Answer |
 |----------|--------|
-
 | Realm | LAB06.LAN |
 | Domain | LAB06 |
 | Server Role | dc |
@@ -920,10 +936,7 @@ sudo systemctl status samba-ad-dc
 #### 5.1.8. Verify the Domain
 
 ```bash
-# Check domain level
 sudo samba-tool domain level show
-
-# Check domain info
 sudo samba-tool domain info 127.0.0.1
 
 # Verify DNS records
@@ -942,7 +955,7 @@ sudo samba-tool user list
 
 ---
 
-### 5.2. Create a shared folder and an AD user
+### 5.2. Create a Shared Folder and an AD User
 
 #### 5.2.1. Create a Domain User
 
@@ -950,18 +963,17 @@ sudo samba-tool user list
 sudo samba-tool user create awsuser Admin_21 \
   --given-name=AWS --surname=User
 
-# Verify
-sudo samba-tool user list
-
 # Set password to never expire (optional for lab)
 sudo samba-tool user setexpiry awsuser --noexpiry
+
+# Verify
+sudo samba-tool user list
 ```
 
 #### 5.2.2. Create a Security Group and Assign the User
 
 ```bash
 sudo samba-tool group add AWSUsers
-
 sudo samba-tool group addmembers AWSUsers awsuser
 
 # Verify
@@ -978,7 +990,7 @@ sudo mkdir -p /srv/samba/awsshare
 sudo chown -R root:"Domain Users" /srv/samba/awsshare
 sudo chmod 770 /srv/samba/awsshare
 
-# Install ACL tools and configure permissions
+# Configure ACLs
 sudo apt install -y acl
 sudo setfacl -m g:AWSUsers:rwx /srv/samba/awsshare
 sudo setfacl -d -m g:AWSUsers:rwx /srv/samba/awsshare
@@ -1016,10 +1028,8 @@ sudo systemctl reload samba-ad-dc
 # List available shares
 smbclient -L localhost -U administrator
 
-# Connect to the share
+# Connect to the share and test read/write
 smbclient //localhost/AWSShare -U awsuser
-
-# Inside SMB session:
 smb: \> ls
 smb: \> put testfile.txt
 smb: \> ls
@@ -1042,11 +1052,11 @@ kdestroy
 
 - 1 In EC2, click **Launch Instance**.
 - 2 Configure:
-  - **AMI:** Windows Server 2022 Base (or Windows 11 if available)
-  - **Instance type:** t2.medium (Windows needs more RAM)
-  - **Security Group:** Same as the DC, plus allow RDP (port 3389) from your IP
-  - **Place in the same VPC and subnet as the DC**
-- 3 Launch and wait for the instance to pass status checks.
+  - **AMI:** Windows Server 2022 Base
+  - **Instance type:** t2.medium
+  - **Security Group:** Same as the DC, plus RDP (port 3389) from your IP
+  - Place in the **same VPC and subnet** as the DC
+- 3 Launch and wait for status checks to pass.
 
 #### 5.3.2. Get Windows Password
 
@@ -1056,41 +1066,37 @@ kdestroy
 
 #### 5.3.3. Connect via xfreerdp
 
-From your local machine, connect to the Windows instance:
-
 ```bash
-xfreerdp /v: /u:Administrator /p:'' /cert:ignore
+xfreerdp /v:<windows-public-ip> /u:Administrator /p:'<decrypted-password>' /cert:ignore
 ```
-
-Once connected, configure the network DNS inside Windows to point to the DC's **private IP**:
-
-Settings → Network & Internet → Ethernet → Edit → Manual:
-
-- **DNS:** `<dc-private-ip>`
 
 #### 5.3.4. Access the Shared Folder
 
-Once logged in to the Windows client, open **File Explorer** and navigate to:
+> **Note:** You do not need to join Windows to the domain to access the shared folder. Simply navigate to the share path and Windows will prompt for credentials.
 
-```txt
-\\<dc-private-ip>\Public
+Once inside the Windows session, open **File Explorer** and type in the address bar:
+
+```
+\\<dc-private-ip>\AWSShare
 ```
 
 or using the FQDN:
 
-```txt
-\\LS06-AWS.lab06.lan\Public
+```
+\\ls06-aws.lab06.lan\AWSShare
 ```
 
-You should see the `Public` shared folder and be able to read and write files as `awsuser`.
+When prompted for credentials enter `LAB06\awsuser` and `Admin_21`. You should now be able to read and write files in the shared folder.
 
 To map it as a persistent network drive:
 
 - 1 Right-click **This PC** → **Map network drive**
 - 2 Drive letter: `Z:`
-- 3 Folder: `\\LS06-AWS.lab06.lan\Public`
+- 3 Folder: `\\ls06-aws.lab06.lan\AWSShare`
 - 4 Check **Reconnect at sign-in**
 - 5 Click **Finish**
+
+---
 
 ### 5.4. Access the AWS Shared Folder from Local Linux
 
@@ -1107,14 +1113,13 @@ For this example the public IP assigned is: `111.11.11.111`
 
 #### 5.4.2. Open SMB Port in the Security Group
 
-By default AWS blocks inbound SMB traffic. Add a rule to allow it from your local machine:
+By default AWS blocks inbound SMB traffic from outside the VPC. Add a rule to allow it from your local machine:
 
 - 1 Go to **EC2** → **Security Groups** → select your DC's security group.
 - 2 Click **Inbound rules** → **Edit inbound rules** → **Add rule**:
 
 | Type | Protocol | Port | Source |
 |------|----------|------|--------|
-
 | Custom TCP | TCP | 445 | My IP |
 
 - 3 Click **Save rules**.
@@ -1128,36 +1133,28 @@ sudo apt install -y cifs-utils smbclient
 
 #### 5.4.4. Test the Connection First
 
-Before mounting, verify you can reach the share:
-
 ```bash
 smbclient -L //111.11.11.111 -U awsuser
 # Enter password: Admin_21
 ```
 
-You should see the `Public` share listed in the output.
+You should see `AWSShare` listed in the output.
 
 #### 5.4.5. Mount the Shared Folder
 
-Create a mount point and a credentials file:
-
 ```bash
 # Create mount point
-sudo mkdir -p /mnt/aws-public
+sudo mkdir -p /mnt/aws-share
 
 # Create credentials file
 nano ~/.smbcredentials-aws
 ```
 
-Add:
-
-```txt
+```
 username=awsuser
 password=Admin_21
 domain=LAB06
 ```
-
-Protect it:
 
 ```bash
 chmod 600 ~/.smbcredentials-aws
@@ -1166,26 +1163,24 @@ chmod 600 ~/.smbcredentials-aws
 Mount the share:
 
 ```bash
-sudo mount -t cifs //111.11.11.111/Public /mnt/aws-public \
+sudo mount -t cifs //111.11.11.111/AWSShare /mnt/aws-share \
   -o credentials=/root/.smbcredentials-aws,uid=$(id -u),gid=$(id -g),iocharset=utf8
 ```
 
-Verify you can list, read and write:
+Verify read and write access:
 
 ```bash
 # List files
-ls -la /mnt/aws-public/
+ls -la /mnt/aws-share/
 
 # Write a test file
-echo "hello from local linux" > /mnt/aws-public/test.txt
+echo "hello from local linux" > /mnt/aws-share/test.txt
 
 # Read it back
-cat /mnt/aws-public/test.txt
+cat /mnt/aws-share/test.txt
 ```
 
 #### 5.4.6. Make the Mount Persistent (fstab)
-
-To automatically mount on boot, add an entry to `/etc/fstab`:
 
 ```bash
 sudo nano /etc/fstab
@@ -1193,9 +1188,11 @@ sudo nano /etc/fstab
 
 Add:
 
-```fstab
-//111.11.11.111/Public  /mnt/aws-public  cifs  credentials=/root/.smbcredentials-aws,uid=1000,gid=1000,iocharset=utf8,_netdev  0  0
 ```
+//111.11.11.111/AWSShare  /mnt/aws-share  cifs  credentials=/root/.smbcredentials-aws,uid=1000,gid=1000,iocharset=utf8,_netdev  0  0
+```
+
+> **`_netdev`** tells the system to wait for the network before mounting, essential for remote shares.
 
 Apply without rebooting:
 
@@ -1203,13 +1200,13 @@ Apply without rebooting:
 sudo mount -a
 
 # Verify
-df -h | grep aws-public
+df -h | grep aws-share
 ```
 
 #### 5.4.7. Unmount When Done
 
 ```bash
-sudo umount /mnt/aws-public
+sudo umount /mnt/aws-share
 ```
 
-> ⚠️ **Security note:** Port 445 open to the internet is a security risk. Once done with testing, either restrict the Security Group rule back to your specific IP or close it entirely and only open it when needed.
+> ⚠️ **Security note:** Port 445 open to the internet is a security risk. Once done with testing, restrict the Security Group rule back to your specific IP or remove it entirely until needed again.

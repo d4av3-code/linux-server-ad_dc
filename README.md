@@ -80,7 +80,7 @@ To replicate this project, you will need the following:
 
 ---
 
-## Sprint 1: Installation and Initial configuration
+## Sprint 1: Installation (samba and kerberos) and Initial configuration
 
 Follow these steps to set up your Linux server as a Samba 4 Domain Controller.
 
@@ -143,6 +143,65 @@ Now install samba and kerberos.
 sudo apt install -y samba krb5-config winbind
 
 ```
+
+### 3.1. Configure Kerberos
+
+During the installation of krb5-config, you will be prompted to enter your Kerberos realm.
+
+Default Kerberos Realm: domain name in uppercase (LAB06.LAN).
+
+Kerberos servers for your realm: LS06.lab06.lan
+
+![image](./images/3.2_kerberos1.png)
+
+Administrative server for your Kerberos realm: LS06.lab06.lan
+
+![image](./images/3.2_kerberos2.png)
+
+### 3.2. Configure Samba
+
+Before provisioning, move or remove the default smb.conf file.
+
+```bash
+sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bkp
+
+# Now, provision the domain (realm in uppercase)
+sudo samba-tool domain provision --use-rfc2307 --interactive
+
+realm=LAB06.LAN
+domain=LAB06
+server-role=dc
+dns-backend=SAMBA_INTERNAL
+dns-forwarder=192.168.6.1
+adminpass="admin_21" 
+
+```
+
+![image](./images/3.3_samba.png)
+
+Now change the dns.
+
+```bash
+sudo echo "nameserver 127.0.0.1
+nameserver 192.168.6.1" | sudo tee >> /etc/resolv.conf
+```
+
+### 3.3. Restart Services
+
+Restart services
+
+```bash
+# Stop and disable non-DC services (if they are running)
+sudo systemctl stop smbd nmbd winbind
+sudo systemctl disable smbd nmbd winbind
+
+# Enable and start the Active Directory DC service
+sudo systemctl unmask samba-ad-dc
+sudo systemctl enable samba-ad-dc
+sudo systemctl start samba-ad-dc
+```
+
+![image](./images/3.4_services-restarted.png)
 
 ---
 
@@ -338,77 +397,7 @@ sudo samba-tool computer list
 
 ---
 
-## Sprint 3: Install samba and kerberos, create and manage users, GPOs/PSOs, create shared folders, create programmed tasks and disk management
-
-install dc(samba, kerberos)
-install domain users
-shared folders
-manage policies (GPOs)(PSOs)
-    Hide Control Panel.
-    Set wallpaper to school logo
-    Minimum 8-character passwords.
-    5-minute lockout after 3 failed attempts.
-programmed tasks (crontab)
-disk management (fstab)
-
-### 3.1. Configure Kerberos
-
-During the installation of krb5-config, you will be prompted to enter your Kerberos realm.
-
-Default Kerberos Realm: domain name in uppercase (LAB06.LAN).
-
-Kerberos servers for your realm: LS06.lab06.lan
-
-![image](./images/3.2_kerberos1.png)
-
-Administrative server for your Kerberos realm: LS06.lab06.lan
-
-![image](./images/3.2_kerberos2.png)
-
-### 3.2. Configure Samba
-
-Before provisioning, move or remove the default smb.conf file.
-
-```bash
-sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bkp
-
-# Now, provision the domain (realm in uppercase)
-sudo samba-tool domain provision --use-rfc2307 --interactive
-
-realm=LAB06.LAN
-domain=LAB06
-server-role=dc
-dns-backend=SAMBA_INTERNAL
-dns-forwarder=192.168.6.1
-adminpass="admin_21" 
-
-```
-
-![image](./images/3.3_samba.png)
-
-Now change the dns.
-
-```bash
-sudo echo "nameserver 127.0.0.1
-nameserver 192.168.6.1" | sudo tee >> /etc/resolv.conf
-```
-
-### 3.3. Restart Services
-
-Restart services
-
-```bash
-# Stop and disable non-DC services (if they are running)
-sudo systemctl stop smbd nmbd winbind
-sudo systemctl disable smbd nmbd winbind
-
-# Enable and start the Active Directory DC service
-sudo systemctl unmask samba-ad-dc
-sudo systemctl enable samba-ad-dc
-sudo systemctl start samba-ad-dc
-```
-
-![image](./images/3.4_services-restarted.png)
+## Sprint 3: Create and manage users, GPOs/PSOs, create shared folders, create programmed tasks and disk management
 
 ### 3.4. Shared folders
 
