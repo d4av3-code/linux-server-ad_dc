@@ -49,29 +49,34 @@ To replicate this project, you will need the following:
 ## Sprints
 
 **Sprint 1:**
-1.1. Install the server
+
+- 1.1. Install the server
 
 **Sprint 2:**
-2.1. Join Windows client
-2.2. Join Linux client
+
+- 2.1. Join Windows client
+- 2.2. Join Linux client
 
 **Sprint 3:**
-3.1. Install Domain Controller (Samba, Kerberos)
-3.2. Create domain user accounts
-3.3. Manage policies (GPOs)
+
+- 3.1. Install Domain Controller (Samba, Kerberos)
+- 3.2. Create domain user accounts
+- 3.3. Manage policies (GPOs)
   - 3.3.1. Minimum 8-character passwords
   - 3.3.2. 5-minute lockout after 3 failed attempts
-3.4. Set up shared folders
-3.5. Scheduled tasks (crontab)
-3.6. Disk management (fstab)
-3.7. Process Management (ps -aux | htop)
+- 3.4. Set up shared folders
+- 3.5. Scheduled tasks (crontab)
+- 3.6. Disk management (fstab)
+- 3.7. Process Management (ps -aux | htop)
 
 **Sprint 4:**
-4.1. Create trust relationships between domains (with peer)
+
+- 4.1. Create trust relationships between domains (with peer)
 
 **Sprint 5:**
-5.1. Create a DC/AD in AWS
-5.2. Crate a shared folder and an AD user
+
+- 5.1. Create a DC/AD in AWS
+- 5.2. Crate a shared folder and an AD user
 
 ---
 
